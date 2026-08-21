@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Deserif</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    width: 320px; margin: 0; padding: 0;
+    font: 13px/1.45 "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: #fff; color: #111;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+  h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  h1 small { font-weight: 400; font-size: 11px; color: #777; margin-left: 6px; letter-spacing: 0; }
+  section { padding: 10px 16px; border-top: 1px solid #eee; }
+  h2 { margin: 0 0 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #777; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; }
+  .row > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .muted { color: #777; }
+  .muted.small { font-size: 11px; }
+
+  /* switch */
+  .switch { position: relative; display: inline-block; width: 34px; height: 20px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; margin: 0; }
+  .switch span { position: absolute; inset: 0; background: #ccc; border-radius: 20px; transition: background .15s; cursor: pointer; }
+  .switch span::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: transform .15s; }
+  .switch input:checked + span { background: #111; }
+  .switch input:checked + span::before { transform: translateX(14px); }
+  .switch input:disabled + span { opacity: .4; cursor: default; }
+
+  /* fonts list */
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid #f2f2f2; }
+  li:last-child { border-bottom: 0; }
+  li .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li .tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 2px 6px; border-radius: 3px; background: #111; color: #fff; flex: none; }
+  li .count { color: #777; font-variant-numeric: tabular-nums; flex: none; }
+  #fontsEmpty { margin: 2px 0 0; }
+
+  /* segmented */
+  .seg { display: flex; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; margin: 2px 0 8px; }
+  .seg button { flex: 1; border: 0; background: transparent; padding: 6px 4px; font: inherit; font-size: 12px; cursor: pointer; color: #444; }
+  .seg button + button { border-left: 1px solid #ddd; }
+  .seg button.on { background: #111; color: #fff; }
+
+  select, input[type=text] {
+    font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: inherit;
+  }
+  select { max-width: 170px; }
+  input[type=text] { width: 100%; margin-top: 6px; }
+  input[type=text][hidden] { display: none; }
+
+  footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 12px; border-top: 1px solid #eee; }
+  footer button { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: inherit; }
+  footer button:hover { border-color: #999; }
+  kbd { font: inherit; font-size: 11px; }
+
+  body.off section:not(#statusSection), body.off footer { opacity: .45; pointer-events: none; }
+
+  @media (prefers-color-scheme: dark) {
+    body { background: #1c1c1e; color: #f2f2f2; }
+    section, footer { border-color: #2c2c2e; }
+    li { border-color: #2a2a2c; }
+    h1 small, h2, .muted, li .count { color: #9a9a9a; }
+    .switch span { background: #48484a; }
+    .switch input:checked + span { background: #f2f2f2; }
+    .switch input:checked + span::before { background: #1c1c1e; }
+    li .tag { background: #f2f2f2; color: #111; }
+    .seg, .seg button + button, select, input[type=text], footer button { border-color: #3a3a3c; }
+    .seg button { color: #ccc; }
+    .seg button.on { background: #f2f2f2; color: #111; }
+    select, input[type=text], footer button { background: #2c2c2e; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Deserif<small id="version"></small></h1>
+    <label class="switch" title="Master switch"><input type="checkbox" id="enabled"><span></span></label>
+  </header>
+
+  <section id="siteSection">
+    <label class="row">
+      <span>On <b id="host">this site</b></span>
+      <span class="switch" style="flex:none"><input type="checkbox" id="siteOn"><span></span></span>
+    </label>
+  </section>
+
+  <section id="statusSection">
+    <h2>Serif fonts on this page</h2>
+    <ul id="fonts"></ul>
+    <p id="fontsEmpty" class="muted"></p>
+  </section>
+
+  <section>
+    <h2>Replace</h2>
+    <div class="seg" id="mode">
+      <button data-mode="all">All serifs</button>
+      <button data-mode="ai">AI favorites only</button>
+    </div>
+    <label class="row">
+      <span>With</span>
+      <select id="preset">
+        <option value="helvetica">Helvetica</option>
+        <option value="system">System UI</option>
+        <option value="inter">Inter</option>
+        <option value="arial">Arial</option>
+        <option value="custom">Custom stack</option>
+      </select>
+    </label>
+    <input type="text" id="custom" placeholder='e.g. "Inter", Helvetica, sans-serif' hidden>
+    <label class="row">
+      <span>Un-italicize serif headline accents</span>
+      <span class="switch" style="flex:none"><input type="checkbox" id="deitalic"><span></span></span>
+    </label>
+  </section>
+
+  <footer>
+    <button id="rescan">Rescan page</button>
+    <span class="muted small"><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> toggles this site</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

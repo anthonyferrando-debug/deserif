@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Deserif test page</title>
+<link rel="stylesheet" href="late.css">
+<style>
+  body { font-family: Inter, system-ui, sans-serif; }
+  h1.play { font-family: 'Playfair Display', Georgia, serif; }
+  .tw-serif { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+  .slab { font-family: "Roboto Slab", serif; }
+  .roboto { font-family: Roboto, sans-serif; }
+  .msans { font-family: "Merriweather Sans", sans-serif; }
+  .mono { font-family: "IBM Plex Mono", monospace; }
+  .quote::before { content: "\201C"; font-family: "DM Serif Display", serif; }
+  .fa::before { content: "\f005"; font-family: "Font Awesome 6 Free"; font-weight: 900; }
+  .unknown-serif { font-family: "SomeBrandSerif", serif; }
+  .unknown-sans { font-family: "SomeBrandSans", Helvetica, sans-serif; }
+  .themed { font-family: Inter, sans-serif; }
+  body.dark .themed { font-family: "Cormorant Garamond", serif; }
+  .fake-ai { font-family: "Instrument Serif", serif; }
+  h2.accent em { font-family: "Instrument Serif", serif; font-style: italic; }
+</style>
+</head>
+<body>
+  <h1 id="t1" class="play">Check your email</h1>
+  <p id="t2">Body copy in Inter, must stay.</p>
+  <div id="t3" class="tw-serif">Tailwind font-serif stack</div>
+  <div id="t4" class="slab">Roboto Slab</div>
+  <div id="t5" class="roboto">Roboto plain</div>
+  <div id="t6" class="msans">Merriweather Sans</div>
+  <div id="t7" class="mono">IBM Plex Mono</div>
+  <div id="t8" class="quote">Pseudo-element quote mark in DM Serif</div>
+  <i id="t9" class="fa"></i>
+  <div id="t10" class="unknown-serif">Unknown brand serif with generic fallback</div>
+  <div id="t11" class="unknown-sans">Unknown brand sans with Helvetica fallback</div>
+  <span id="t12" style="font-family: Georgia, serif !important">Inline important Georgia</span>
+  <div id="t13" class="themed">Theme-toggled element</div>
+  <div id="t14" class="late">Styled by a late-loading stylesheet</div>
+  <h2 id="t15" class="accent">Headline with <em id="t15em">italic accent</em></h2>
+  <div id="host"></div>
+  <div id="dyn"></div>
+  <pre id="CDBG"></pre>
+  <script>
+    // Shadow DOM component using Lora
+    const h = document.getElementById('host');
+    const sr = h.attachShadow({ mode: 'open' });
+    sr.innerHTML = '<style>p{font-family:Lora,serif}</style><p id="shadowp">Shadow DOM Lora</p>';
+
+    // Dynamic insertion later
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.id = 't16'; d.className = 'fake-ai'; d.textContent = 'Injected Instrument Serif';
+      document.getElementById('dyn').appendChild(d);
+    }, 300);
+
+    // Theme toggle via class on body
+    setTimeout(() => document.body.classList.add('dark'), 600);
+
+    // Report
+    setTimeout(() => {
+      const ids = ['t1','t2','t3','t4','t5','t6','t7','t8','t9','t10','t11','t12','t13','t14','t15','t15em','t16'];
+      const out = {};
+      for (const id of ids) {
+        const el = document.getElementById(id);
+        if (!el) { out[id] = null; continue; }
+        const cs = getComputedStyle(el);
+        out[id] = {
+          ff: cs.fontFamily,
+          fs: cs.fontStyle,
+          tagged: el.hasAttribute('data-deserif'),
+          before: el.hasAttribute('data-deserif-before'),
+          beforeFF: getComputedStyle(el, '::before').fontFamily
+        };
+      }
+      const sp = sr.getElementById('shadowp');
+      out.shadowp = { ff: getComputedStyle(sp).fontFamily, tagged: sp.hasAttribute('data-deserif') };
+      document.getElementById('CDBG').textContent = JSON.stringify(out);
+    }, 2500);
+  </script>
+</body>
+</html>

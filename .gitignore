@@ -1,0 +1,4 @@
+dist/
+test/profile*/
+*.zip
+.DS_Store

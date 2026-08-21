@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Deserif",
+  "version": "1.0.0",
+  "description": "Replaces the AI-slop serif headline fonts (Playfair Display, Instrument Serif, Fraunces, Lora and friends) with Helvetica. Also tells you which font a page is using.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Deserif",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" }
+  },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "commands": {
+    "toggle-site": {
+      "suggested_key": { "default": "Alt+Shift+D", "mac": "Alt+Shift+D" },
+      "description": "Toggle Deserif on the current site"
+    }
+  }
+}
