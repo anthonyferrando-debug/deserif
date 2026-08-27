@@ -2,3 +2,7 @@ dist/
 test/profile*/
 *.zip
 .DS_Store
+test/slop/profile/
+test/slop/*.pem
+test/slop/api.log
+test/slop/shot*.png
