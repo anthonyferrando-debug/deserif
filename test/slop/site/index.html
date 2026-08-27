@@ -7,9 +7,12 @@
   body { font-family: Helvetica, Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 16px; }
   .post { background: #fff; border-radius: 8px; padding: 12px; margin: 0 auto 16px; width: 500px; }
   .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .meta { color: #65676b; font-size: 13px; }
+  .pill { display: inline-flex; align-items: center; gap: 4px; background: #e4e6eb; border-radius: 12px; padding: 2px 8px; font-size: 12px; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
   .media { position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 6px; background: #000; }
   .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .media .overlay { position: absolute; left: 10px; bottom: 10px; }
   .comment { margin: 10px 0 0 48px; }
   .comment img.attach { display: block; max-width: 100%; height: auto; border-radius: 8px; }
   .emoji { width: 16px; height: 16px; vertical-align: middle; }
@@ -18,8 +21,8 @@
 <body>
 <script>
   // Remember each image's first rendered size so the test can prove a blocked
-  // image keeps its box.
-  window.__sizes = {};
+  // image keeps its box, and whether an image was ever blocked.
+  window.__sizes = {}; window.__everBlocked = {};
   document.addEventListener('load', e => {
     const t = e.target;
     if (t.tagName === 'IMG' && t.id && !(t.id in window.__sizes)) {
@@ -27,51 +30,97 @@
       window.__sizes[t.id] = [Math.round(r.width), Math.round(r.height)];
     }
   }, true);
+  new MutationObserver(rs => { for (const r of rs) if (r.target.id && r.target.getAttribute('data-deserif-slop') === 'blocked') window.__everBlocked[r.target.id] = true; })
+    .observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ['data-deserif-slop'] });
 </script>
 
-<div class="post">
+<!-- 1. label in the post header, next to the timestamp -->
+<div role="article" aria-posinset="1" class="post" id="post_header_label">
   <div class="head">
     <img id="p_avatar" class="avatar" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=aa">
-    <b>Ramon Walker</b>
-    <img id="p_emoji" class="emoji" src="https://static.xx.fbcdn.net/images/emoji.php/v9/t1/1/16/1f600.png">
+    <div><b>Ramon Walker</b> <img id="p_emoji" class="emoji" src="https://static.xx.fbcdn.net/images/emoji.php/v9/t1/1/16/1f600.png"><br>
+    <span class="meta">3h · <span class="pill"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 0l1.5 4.5L12 6l-4.5 1.5L6 12l-1.5-4.5L0 6l4.5-1.5z" fill="#65676b"/></svg><span>AI info</span></span></span></div>
   </div>
   <p>NEXA bought UMortgage. But what happens to the shares? <img id="p_rsrc" class="emoji" src="https://www.facebook.com/rsrc.php/v3/yx/r/like.png"></p>
   <a href="#photo-opened" id="link_poster"><div class="media">
-    <img id="p_poster" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_poster.jpg?_nc_cat=1&amp;oh=bb" alt="May be an image of text that says 'Bridging the Digital Divide'">
+    <img id="p_poster" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_poster.jpg?_nc_cat=1&amp;oh=bb" alt="May be an image of text">
+  </div></a>
+  <div role="article" aria-label="Comment by Jane Doe 2 hours ago" class="comment">
+    <p>I read the AI info page about this and it is a real screenshot</p>
+    <img id="p_c1" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_screenshot.jpg?_nc_cat=1&amp;oh=cc" width="400">
+  </div>
+</div>
+
+<!-- 2. label overlaid on the photo itself -->
+<div role="article" aria-posinset="2" class="post" id="post_overlay_label">
+  <div class="head"><img class="avatar" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=aa"><b>Some Page</b></div>
+  <a href="#photo-opened"><div class="media">
+    <img id="p_effect" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_effect.jpg?_nc_cat=1&amp;oh=dd">
+    <div class="overlay"><span class="pill">✨ AI info</span></div>
   </div></a>
 </div>
 
-<div class="post">
+<!-- 3. plain post, real photo; one comment labeled (icon-only button with aria-label), two not -->
+<div role="article" aria-posinset="3" class="post" id="post_plain">
   <div class="head"><img class="avatar" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=aa"><b>Anthony Ferrando</b></div>
   <a href="#photo-opened"><div class="media">
-    <img id="p_head" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=cc">
+    <img id="p_head" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=ee">
   </div></a>
-  <div class="comment"><img id="p_info" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_infographic.jpg?_nc_cat=1&amp;oh=dd" width="400"></div>
-  <div class="comment"><img id="p_dup" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_infographic.jpg?_nc_cat=1&amp;oh=ee" width="300"></div>
+  <div role="article" aria-label="Comment by Bob Roe 1 hour ago" class="comment" id="comment_labeled">
+    <p>look at this <div role="button" class="pill" aria-label="Made with AI"><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="#65676b"/></svg></div></p>
+    <img id="p_info" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_infographic.jpg?_nc_cat=1&amp;oh=ff" width="400">
+  </div>
+  <div role="article" aria-label="Comment by Cy Poe 50 minutes ago" class="comment">
+    <img id="p_shot" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_screenshot.jpg?_nc_cat=1&amp;oh=gg" width="400">
+  </div>
+  <div role="article" aria-label="Comment by Di Moe 40 minutes ago" class="comment">
+    <p>made with ai lol, obviously</p>
+    <img id="p_blog" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/blog_image.jpg?_nc_cat=1&amp;oh=hh" width="400">
+  </div>
 </div>
 
-<div class="post">
+<!-- 4. label arrives after the image (React renders the header late) -->
+<div role="article" aria-posinset="4" class="post" id="post_late_label">
+  <div class="head"><b>Late Labeler</b> <span class="meta" id="lateMeta">2h</span></div>
   <a href="#photo-opened"><div class="media">
-    <img id="p_effect" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_effect.jpg?_nc_cat=1&amp;oh=ff">
+    <img id="p_late" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_diagram.jpg?_nc_cat=1&amp;oh=ii">
   </div></a>
-  <div class="comment"><img id="p_shot" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_screenshot.jpg?_nc_cat=1&amp;oh=gg" width="400"></div>
-  <div class="comment"><img id="p_blog" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/blog_image.jpg?_nc_cat=1&amp;oh=hh" width="400"></div>
-  <div class="comment"><img id="p_recycle" class="attach" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=ii" width="300"></div>
-  <div class="comment" id="lazyHost"></div>
-  <div class="comment"><img id="p_offsite" class="attach" src="https://www.facebook.com/local/ai_poster.jpg" width="300"></div>
 </div>
+
+<!-- 5. label present, then removed (post re-rendered as something else) -->
+<div role="article" aria-posinset="5" class="post" id="post_label_removed">
+  <div class="head"><b>Changing Post</b> <span class="meta"><span class="pill" id="removablePill">AI info</span></span></div>
+  <a href="#photo-opened"><div class="media">
+    <img id="p_removed" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_poster.jpg?_nc_cat=1&amp;oh=jj">
+  </div></a>
+</div>
+
+<!-- 6. labeled post whose <img> gets recycled for a different picture; plus an off-site image -->
+<div role="article" aria-posinset="6" class="post" id="post_recycle">
+  <div class="head"><b>Recycler</b> <span class="meta"><span class="pill">AI info</span></span></div>
+  <a href="#photo-opened"><div class="media">
+    <img id="p_recycle" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/real_headshot.jpg?_nc_cat=1&amp;oh=kk">
+  </div></a>
+  <img id="p_offsite" class="attach" src="https://www.facebook.com/local/ai_poster.jpg" width="300">
+</div>
+
+<div id="lateHost"></div>
 
 <script>
-  // A comment image that arrives later, and an element Facebook recycles for a
-  // different picture after it was already checked.
+  // A whole labeled post that arrives later (infinite scroll)
   setTimeout(() => {
-    const img = document.createElement('img');
-    img.id = 'p_lazy'; img.className = 'attach'; img.width = 400;
-    img.src = 'https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_diagram.jpg?_nc_cat=1&oh=jj';
-    document.getElementById('lazyHost').appendChild(img);
+    document.getElementById('lateHost').innerHTML =
+      '<div role="article" aria-posinset="7" class="post" id="post_lazy">' +
+      '<div class="head"><b>Scrolled In</b> <span class="meta"><span class="pill">AI info</span></span></div>' +
+      '<a href="#photo-opened"><div class="media"><img id="p_lazy" src="https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_infographic.jpg?_nc_cat=1&oh=ll"></div></a></div>';
   }, 1500);
+  // The late label
+  setTimeout(() => { document.getElementById('lateMeta').innerHTML = '2h · <span class="pill">AI info</span>'; }, 2000);
+  // The removed label
+  setTimeout(() => { document.getElementById('removablePill').remove(); }, 3000);
+  // The recycled element
   setTimeout(() => {
-    document.getElementById('p_recycle').src = 'https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_effect.jpg?_nc_cat=1&oh=kk';
+    document.getElementById('p_recycle').src = 'https://scontent.xx.fbcdn.net/v/t39.30808-6/ai_effect.jpg?_nc_cat=1&oh=mm';
   }, 3000);
 </script>
 </body>

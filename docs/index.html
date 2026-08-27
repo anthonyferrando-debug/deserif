@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Deserif</title>
-<meta name="description" content="A Chrome extension that replaces the AI-slop serif fonts (Playfair Display, Instrument Serif, Fraunces, Lora and friends) with Helvetica, tells you which font a page is using, and hides AI-generated images in your Facebook feed.">
+<meta name="description" content="A Chrome extension that replaces the AI-slop serif fonts (Playfair Display, Instrument Serif, Fraunces, Lora and friends) with Helvetica, tells you which font a page is using, and hides the images Facebook labels as made with AI.">
 <meta property="og:title" content="Deserif">
-<meta property="og:description" content="Every AI-built website ships with the same serif headline. Deserif swaps it for Helvetica. It also hides AI slop images on Facebook.">
+<meta property="og:description" content="Every AI-built website ships with the same serif headline. Deserif swaps it for Helvetica. On Facebook it hides the images Meta labels as AI.">
 <meta property="og:image" content="https://anthonyferrando-debug.github.io/deserif/assets/icon.png">
 <link rel="icon" href="assets/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,6 +62,13 @@
   .chip { padding: 6px 12px; border: 1.5px solid var(--ink); border-radius: 999px; font-size: 14px; font-weight: 600; }
   .chip.serif { font-family: "Playfair Display", Georgia, serif; }
 
+  .slopdemo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0 0 28px; }
+  .slopdemo .card { position: relative; border-radius: 12px; aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: #8a8a8a; color: #fff; text-align: center; }
+  .slopdemo .card svg { width: 40%; max-width: 200px; height: auto; }
+  .slopdemo .fake { flex-direction: column; background: linear-gradient(160deg, #0b1a3a, #1f3a6b 60%, #0b1a3a); color: #f2c94c; font-family: "Playfair Display", Georgia, serif; font-weight: 700; padding: 24px; font-size: clamp(20px, 2.6vw, 30px); line-height: 1.15; text-transform: uppercase; }
+  .slopdemo .fake small { display: block; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; text-transform: none; color: #cfd8e8; font-size: 13px; margin-top: 14px; }
+  .slopdemo .pill { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.92); color: #1c1e21; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 600; font-size: 13px; text-transform: none; padding: 4px 10px; border-radius: 999px; }
+
   .steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: 22px; }
   .steps li { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: start; counter-increment: step; }
   .steps li::before { content: counter(step); font-size: 48px; font-weight: 700; line-height: 1; color: var(--red); letter-spacing: -0.04em; }
@@ -73,11 +80,6 @@
   .shot { display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: center; }
   .shot img { width: 100%; max-width: 320px; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 14px 40px rgba(0,0,0,.12); }
 
-  .slopdemo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0 0 28px; }
-  .slopdemo .card { border-radius: 12px; aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center; background: #8a8a8a; color: #fff; text-align: center; }
-  .slopdemo .card svg { width: 40%; max-width: 200px; height: auto; }
-  .slopdemo .fake { flex-direction: column; background: linear-gradient(160deg, #0b1a3a, #1f3a6b 60%, #0b1a3a); color: #f2c94c; font-family: "Playfair Display", Georgia, serif; font-weight: 700; padding: 24px; font-size: clamp(16px, 2vw, 22px); line-height: 1.2; text-transform: uppercase; }
-  .slopdemo .fake small { display: block; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 400; text-transform: none; color: #cfd8e8; font-size: 13px; margin-top: 14px; }
   .faq div { padding: 18px 0; border-top: 1px solid #ddd; }
   .faq div:last-child { border-bottom: 1px solid #ddd; }
   .faq p { margin: 0; color: #333; }
@@ -112,12 +114,12 @@
 <div class="wrap">
   <div class="hero">
     <h1>Every AI-built website ships with the same serif headline. <span class="red">Deserif</span> swaps it for Helvetica.</h1>
-    <p class="lede">A Chrome extension that spots Playfair Display, Instrument Serif, Fraunces, Lora and the rest of the vibe-coded lineup on any page and renders them in Helvetica instead. It also names the font, so you can stop squinting at it. And since 1.1 it hides the AI-generated images in your Facebook feed behind a grey card you can click to reveal.</p>
+    <p class="lede">A Chrome extension that spots Playfair Display, Instrument Serif, Fraunces, Lora and the rest of the vibe-coded lineup on any page and renders them in Helvetica instead. It also names the font, so you can stop squinting at it. And on Facebook, it hides the images Meta labels as made with AI.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/anthonyferrando-debug/deserif/releases/latest/download/deserif.zip">Download deserif.zip</a>
       <a class="btn" href="#install">How to install</a>
     </div>
-    <p class="fine">Free and open source. No accounts, no tracking. The font part never leaves your browser; the Facebook part talks only to the Anthropic API with your own key. Works in Chrome, Brave, Edge, Arc and any other Chromium browser.</p>
+    <p class="fine">Free and open source. No accounts, no tracking, no API keys, nothing leaves your browser. Works in Chrome, Brave, Edge, Arc and any other Chromium browser.</p>
   </div>
 
   <div class="demo">
@@ -160,11 +162,48 @@
       </div>
       <div>
         <h3>Stays out of the way</h3>
-        <p>One scan when the page finishes loading, then it only reacts to changes. Settings sync through your Chrome profile. There is no server of ours.</p>
+        <p>One scan when the page finishes loading, then it only reacts to changes. Settings sync through your Chrome profile. There is no server.</p>
       </div>
       <div class="wide">
-        <h3>Hides AI slop on Facebook</h3>
-        <p>Feed and comment images get a yes-or-no from Claude. The AI-generated ones turn into a grey card the same size as the picture, so the page does not jump. <a href="#slop">How it works</a>.</p>
+        <h3>Hides AI images on Facebook</h3>
+        <p>Every image in a post or comment that Facebook itself has labeled "AI info" turns into a grey card the same size as the picture, so the page does not jump. Click to see it anyway. <a href="#slop">How it works</a>.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<hr class="rule">
+<div class="wrap">
+  <section id="slop">
+    <h2>AI images on Facebook, behind a card you can click</h2>
+    <p class="lede" style="font-size:18px">The gold-on-navy "infographic" someone's cousin made with ChatGPT, the plastic 3D render, the motivational poster with melted letters. Meta already marks a lot of it with a small "AI info" label. Deserif reads that label and hides the pictures under it.</p>
+    <div class="slopdemo">
+      <div class="card fake"><span>NEXA bought UMortgage. But what happens to the shares?</span><small>The kind of comment-section image this is for</small><span class="pill"><svg width="13" height="13" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 0l1.5 4.5L12 6l-4.5 1.5L6 12l-1.5-4.5L0 6l4.5-1.5z" fill="#1c1e21"/></svg>AI info</span></div>
+      <div class="card">
+        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" aria-label="AI SLOP card">
+          <circle cx="100" cy="56" r="38" fill="none" stroke="#e10600" stroke-width="11"/>
+          <line x1="73.1" y1="29.1" x2="126.9" y2="82.9" stroke="#e10600" stroke-width="11" stroke-linecap="round"/>
+          <text x="100" y="128" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="30" font-weight="700" fill="#fff" letter-spacing="2">AI SLOP</text>
+          <text x="100" y="150" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="12" fill="#fff" fill-opacity=".85">click to show</text>
+        </svg>
+      </div>
+    </div>
+    <div class="grid">
+      <div>
+        <h3>Facebook does the detecting</h3>
+        <p>Meta labels posts and comments made with AI, either because the poster said so or because the file carried generator metadata. Deserif looks for that label, the same one you see next to the post, and hides every content image inside the labeled post or comment. Avatars, emoji and icons are never touched.</p>
+      </div>
+      <div>
+        <h3>Nothing leaves your browser</h3>
+        <p>No API key, no uploads, no server. The check is a text match on the page you are already looking at, so it costs nothing and there is no waiting for a verdict.</p>
+      </div>
+      <div>
+        <h3>Same box, no jump</h3>
+        <p>The card takes the image's exact size. Click it and the original is back; the popup has Show all and Hide again for the whole page, and the badge turns red with the number hidden.</p>
+      </div>
+      <div>
+        <h3>Only what Facebook labels</h3>
+        <p>If Meta missed one, so does Deserif. Content Meta calls merely "edited with AI" keeps its label inside the post menu, where the extension cannot see it. Switch it off for facebook.com with <code>Alt+Shift+D</code> any time.</p>
       </div>
     </div>
   </section>
@@ -179,43 +218,6 @@
       <span class="chip serif">Playfair Display</span><span class="chip serif">Instrument Serif</span><span class="chip serif">DM Serif Display</span><span class="chip serif">Fraunces</span><span class="chip serif">Cormorant Garamond</span><span class="chip serif">Lora</span><span class="chip serif">Newsreader</span><span class="chip serif">Libre Baskerville</span><span class="chip serif">EB Garamond</span><span class="chip serif">Crimson Pro</span><span class="chip serif">Source Serif</span><span class="chip serif">Merriweather</span><span class="chip serif">Literata</span><span class="chip serif">Spectral</span><span class="chip serif">Young Serif</span><span class="chip serif">Gloock</span><span class="chip serif">Bodoni Moda</span><span class="chip serif">Abril Fatface</span><span class="chip serif">Prata</span><span class="chip serif">Italiana</span><span class="chip serif">Cinzel</span><span class="chip serif">Marcellus</span><span class="chip serif">Gambarino</span><span class="chip serif">Sentient</span><span class="chip serif">Erode</span><span class="chip serif">Zodiak</span><span class="chip serif">Recoleta</span><span class="chip serif">Editorial New</span><span class="chip serif">Tiempos</span><span class="chip serif">Canela</span><span class="chip serif">Roboto Slab</span><span class="chip serif">Zilla Slab</span><span class="chip serif">Bitter</span><span class="chip serif">Domine</span>
     </div>
     <p class="cap">Only the first one is actually loaded on this page; the chips borrow it so you get the idea. Every other serif, from Georgia to Times to a brand font nobody has heard of, is covered by "All serifs" mode.</p>
-  </section>
-</div>
-
-<hr class="rule">
-<div class="wrap">
-  <section id="slop">
-    <h2>AI slop images on Facebook, behind a card you can click</h2>
-    <p class="lede" style="font-size:18px">The gold-on-navy "infographic" someone's cousin made with ChatGPT, the plastic 3D render, the motivational poster with melted letters. Deserif asks Claude whether each image in your feed was made by an AI image generator and, if so, covers it.</p>
-    <div class="slopdemo">
-      <div class="card fake"><span>NEXA bought UMortgage. But what happens to the shares?</span><small>The kind of comment-section image this is for</small></div>
-      <div class="card">
-        <svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg" aria-label="AI SLOP card">
-          <circle cx="100" cy="56" r="38" fill="none" stroke="#e10600" stroke-width="11"/>
-          <line x1="73.1" y1="29.1" x2="126.9" y2="82.9" stroke="#e10600" stroke-width="11" stroke-linecap="round"/>
-          <text x="100" y="128" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="30" font-weight="700" fill="#fff" letter-spacing="2">AI SLOP</text>
-          <text x="100" y="150" text-anchor="middle" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="12" fill="#fff" fill-opacity=".85">click to show</text>
-        </svg>
-      </div>
-    </div>
-    <div class="grid">
-      <div>
-        <h3>Same box, no jump</h3>
-        <p>The card takes the image's exact size. Click it and the original is back; the popup has Show all and Hide again for the whole page. Avatars, emoji and icons are never touched.</p>
-      </div>
-      <div>
-        <h3>Your own API key</h3>
-        <p>Paste an <a href="https://console.anthropic.com/">Anthropic API key</a> in the popup. It stays in that browser and is sent to api.anthropic.com and nowhere else. A downscaled feed image costs well under a cent with Claude Opus 5, and verdicts are cached so the same picture is never paid for twice.</p>
-      </div>
-      <div>
-        <h3>You set the bar</h3>
-        <p>The model returns a confidence. Hide at 60% or more by default, 40% to catch more, 80% for only the obvious. Blur images until checked, or don't.</p>
-      </div>
-      <div>
-        <h3>Fails open</h3>
-        <p>No key, a slow answer, a rate limit, an undecided model: the image shows as normal. The badge turns red with the number of hidden images on the page.</p>
-      </div>
-    </div>
   </section>
 </div>
 
@@ -238,11 +240,11 @@
 <div class="wrap">
   <section>
     <div class="shot">
-      <img src="assets/popup.png" alt="The Deserif popup listing Playfair Display, Georgia and Instrument Serif found on a page, with mode and replacement font controls" width="320">
+      <img src="assets/popup.png" alt="The Deserif popup: serif fonts found on the page, replacement controls, and the Facebook AI image switch" width="320">
       <div>
         <h2>The popup is also a font identifier</h2>
         <p>Click the icon on any page and it lists every serif family it found, how many elements use it, and which ones are the AI favorites. The badge on the icon shows the count at a glance.</p>
-        <p>From the same panel: master switch, per-site switch, all-serifs or AI-only mode, the replacement font, the italic-accent option, and the Facebook slop controls: key, model, threshold, blur, and the hidden count with Show all and Hide again.</p>
+        <p>From the same panel: master switch, per-site switch, all-serifs or AI-only mode, the replacement font, the italic-accent option, and on a Facebook tab the labeled and hidden counts with Show all and Hide again.</p>
       </div>
     </div>
   </section>
@@ -254,10 +256,10 @@
     <h2>Questions</h2>
     <div class="faq">
       <div><h3>Why Helvetica?</h3><p>Because it is the opposite of a "premium" display serif: neutral, legible, and it has been doing this job since 1957. Pick System UI or Inter in the popup if you prefer, or type any stack you want.</p></div>
-      <div><h3>Does it send anything anywhere?</h3><p>The font replacement, no: no network requests at all. The Facebook slop blocker sends a downscaled copy of each feed image to api.anthropic.com with your own key, and nothing to anyone else. Switch it off in the popup and nothing leaves the browser. No analytics, no accounts. The code is small enough to read in one sitting, and it is all on GitHub.</p></div>
+      <div><h3>Does it send anything anywhere?</h3><p>No. No network requests, no analytics, no accounts, no API keys. The Facebook part reads a label that is already on the page. The code is small enough to read in one sitting, and it is all on GitHub.</p></div>
       <div><h3>Will it break icons or code blocks?</h3><p>No. Icon fonts, monospace fonts and every sans font are excluded before the serif check runs.</p></div>
+      <div><h3>Can it hide the wrong image on Facebook?</h3><p>It only hides what Facebook has labeled, so a miss is Facebook's miss. If Meta put its label on something you want to see, the original is one click away, and Show all in the popup brings back the whole page.</p></div>
       <div><h3>A site looks wrong with it on.</h3><p>Press <code>Alt+Shift+D</code> to switch it off for that site, or use the switch in the popup. Then <a href="https://github.com/anthonyferrando-debug/deserif/issues">open an issue</a> with the URL.</p></div>
-      <div><h3>Can it get an image wrong?</h3><p>Yes, both ways. A real photo hidden by mistake is one click away; an AI image that slipped through is the model being cautious. The threshold in the popup moves the line. Verdicts are cached, so a change applies without re-checking.</p></div>
       <div><h3>Why is it not in the Chrome Web Store?</h3><p>Not yet. The unpacked install takes a minute and works in every Chromium browser, and it means you can read exactly what you are running.</p></div>
     </div>
   </section>

@@ -6,3 +6,4 @@ test/slop/profile/
 test/slop/*.pem
 test/slop/api.log
 test/slop/shot*.png
+__pycache__/

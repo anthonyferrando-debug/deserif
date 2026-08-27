@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Steers headless Chromium over CDP for the slop test and checks the results.
-Usage: drive.py CDP_PORT API_PORT HERE"""
+"""Steers headless Chromium over CDP for the Facebook blocker test and checks the results.
+Usage: drive.py CDP_PORT HERE"""
 import base64, json, sys, time, urllib.request
 import websocket
 
-cdp_port, api_port, here = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+cdp_port, here = int(sys.argv[1]), sys.argv[2]
 BASE = 'http://127.0.0.1:%d' % cdp_port
 
 def http(path, method='GET'):
@@ -54,25 +54,25 @@ ext = sw[0]['url'].split('/')[2]
 # 2. seed settings through the popup page (it has chrome.storage)
 popup = new_tab('chrome-extension://%s/popup.html' % ext)
 time.sleep(0.5)
-popup.eval("new Promise(r => chrome.storage.local.set({slopKey: 'test-key', slopApiBase: 'http://127.0.0.1:%d', slopKeyError: '', slopLastError: null}, "
-           "() => chrome.storage.sync.set({slopEnabled: true, slopBlur: true, slopModel: 'claude-opus-5', slopThreshold: 60}, r)))" % api_port, aw=True)
-check(popup.eval("new Promise(r => chrome.storage.local.get('slopKey', v => r(v.slopKey)))", aw=True) == 'test-key', 'settings seeded through the popup')
+popup.eval("new Promise(r => chrome.storage.sync.set({slopEnabled: true, enabled: true, disabledHosts: []}, r))", aw=True)
+check(popup.eval("new Promise(r => chrome.storage.sync.get('slopEnabled', v => r(v.slopEnabled)))", aw=True) is True, 'settings seeded through the popup')
 
 # 3. the fake feed
 STATE = """(() => {
   const o = {};
   for (const img of document.querySelectorAll('img[id]')) {
     const r = img.getBoundingClientRect();
-    o[img.id] = { st: img.getAttribute('data-deserif-slop'), src: (img.getAttribute('src') || '').slice(0, 40),
+    o[img.id] = { st: img.getAttribute('data-deserif-slop'), src: (img.getAttribute('src') || '').slice(0, 70),
                   w: Math.round(r.width), h: Math.round(r.height), title: img.getAttribute('title') || '' };
   }
-  o.__hash = location.hash; o.__sizes = window.__sizes || {};
+  o.__units = Array.from(document.querySelectorAll('[data-deserif-ai]')).map(u => u.id);
+  o.__hash = location.hash; o.__sizes = window.__sizes || {}; o.__ever = window.__everBlocked || {};
   return o;
 })()"""
 EXPECT = {
-    'p_poster': 'blocked', 'p_info': 'blocked', 'p_effect': 'blocked', 'p_dup': 'blocked',
-    'p_lazy': 'blocked', 'p_recycle': 'blocked',
-    'p_head': 'ok', 'p_shot': 'ok', 'p_blog': 'ok',
+    'p_poster': 'blocked', 'p_effect': 'blocked', 'p_info': 'blocked', 'p_late': 'blocked',
+    'p_recycle': 'blocked', 'p_lazy': 'blocked',
+    'p_c1': None, 'p_head': None, 'p_shot': None, 'p_blog': None, 'p_removed': None,
     'p_avatar': None, 'p_emoji': None, 'p_rsrc': None, 'p_offsite': None,
 }
 def state():
@@ -87,25 +87,13 @@ def wait_ready():
         time.sleep(0.2)
     sys.exit('FAIL: fake feed never loaded')
 
-def sweep():
-    # read the feed the way a person does: scroll to the bottom in steps, stay there
-    height = page.eval('(document.documentElement || {}).scrollHeight || 0')
-    for y in range(0, height + 600, 600):
-        page.eval('window.scrollTo(0, %d)' % y)
-        time.sleep(0.15)
-
-def wait_settled(seconds=45, min_age=6):
+def wait_settled(seconds=12, min_age=4.5):
     t0 = time.time()
-    last = 0
     while time.time() - t0 < seconds:
-        if time.time() - last > 2:
-            sweep()
-            last = time.time()
         st = state()
-        pending = [k for k, v in st.items() if isinstance(v, dict) and v.get('st') == 'pending']
-        if time.time() - t0 >= min_age and all(k in st for k in EXPECT) and not pending:
+        if time.time() - t0 >= min_age and all(k in st for k in EXPECT) and all(st[k]['st'] == v for k, v in EXPECT.items()):
             return st
-        time.sleep(0.5)
+        time.sleep(0.3)
     return state()
 
 page = new_tab('https://www.facebook.com/index.html')
@@ -115,12 +103,16 @@ st = wait_settled()
 for k, exp in EXPECT.items():
     got = st.get(k, {}).get('st')
     check(got == exp, '%-10s expected %-8s got %s' % (k, exp, got))
-for k in ('p_poster', 'p_info', 'p_dup', 'p_lazy'):
+check(sorted(st['__units']) == sorted(['post_header_label', 'post_overlay_label', 'comment_labeled', 'post_late_label', 'post_recycle', 'post_lazy']),
+      'labeled units: %s' % sorted(st['__units']))
+for k in ('p_poster', 'p_effect', 'p_info', 'p_lazy'):
     before = st['__sizes'].get(k)
     now = [st[k]['w'], st[k]['h']]
     check(before is not None and abs(before[0] - now[0]) <= 1 and abs(before[1] - now[1]) <= 1, '%-10s keeps its box %s -> %s' % (k, before, now))
 check(st['p_poster']['src'].startswith('data:image/svg+xml'), 'blocked image src is the transparent SVG')
 check('Click to show' in st['p_poster']['title'], 'blocked image has the tooltip')
+check(st['__ever'].get('p_removed') is True and st['p_removed']['src'].startswith('https://scontent'), 'label removed later: image was hidden, then restored')
+check(st['p_recycle']['st'] == 'blocked', 'recycled element in a labeled post is hidden again with the new picture')
 
 shot = page.call('Page.captureScreenshot', format='png')
 open(here + '/shot-blocked.png', 'wb').write(base64.b64decode(shot['data']))
@@ -140,57 +132,50 @@ check(st['__hash'] == '', 'the wrapping link was not followed (hash %r)' % st['_
 shot = page.call('Page.captureScreenshot', format='png')
 open(here + '/shot-revealed.png', 'wb').write(base64.b64decode(shot['data']))
 
-# 5. popup messages: stats, hide again
+# 5. a mutation inside that post does not re-hide what the person chose to show
+page.eval("document.getElementById('post_header_label').appendChild(document.createTextNode('new comment text'))")
+time.sleep(0.6)
+check(state()['p_poster']['st'] == 'shown', 'revealed image stays shown after the post re-renders')
+
+# 6. revealing the recycled image gives back the NEW picture, not the old one
+page.eval("document.getElementById('p_recycle').scrollIntoView({block: 'center'})")
+time.sleep(0.2)
+pt = page.eval("(() => { const r = document.getElementById('p_recycle').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()")
+page.call('Input.dispatchMouseEvent', type='mousePressed', x=pt['x'], y=pt['y'], button='left', clickCount=1)
+page.call('Input.dispatchMouseEvent', type='mouseReleased', x=pt['x'], y=pt['y'], button='left', clickCount=1)
+time.sleep(0.4)
+check('ai_effect' in state()['p_recycle']['src'], 'recycled image reveals its new picture')
+
+# 7. popup messages: stats, hide again, show all
 TAB = "chrome.tabs.query({url: 'https://www.facebook.com/*'}).then(ts => chrome.tabs.sendMessage(ts[0].id, {type: '%s'}, {frameId: 0}))"
 s = popup.eval(TAB % 'slop:getStats', aw=True)
-check(s and s['blocked'] == 5 and s['shown'] == 1 and s['active'] and not s['paused'], 'popup stats %s' % json.dumps(s))
-s = popup.eval(TAB % 'slop:hideAll', aw=True)
+check(s and s['blocked'] == 4 and s['shown'] == 2 and s['units'] == 6 and s['active'], 'popup stats %s' % json.dumps(s))
+popup.eval(TAB % 'slop:hideAll', aw=True)
 time.sleep(0.3)
-check(state()['p_poster']['st'] == 'blocked', 'hide again re-blocks the shown image')
+st = state()
+check(st['p_poster']['st'] == 'blocked' and st['p_recycle']['st'] == 'blocked', 'hide again re-blocks the shown images')
+popup.eval(TAB % 'slop:showAll', aw=True)
+time.sleep(0.3)
+st = state()
+check(all(st[k]['st'] == 'shown' for k in ('p_poster', 'p_effect', 'p_info', 'p_late', 'p_recycle', 'p_lazy')), 'show all reveals everything')
+popup.eval(TAB % 'slop:hideAll', aw=True)
+time.sleep(0.3)
 
-# 6. threshold change re-evaluates cached verdicts without new requests
-lines_before = sum(1 for _ in open(here + '/api.log'))
-popup.eval("chrome.storage.sync.set({slopThreshold: 40})", aw=True)
-time.sleep(0.8)
-check(state()['p_blog']['st'] == 'blocked', 'threshold 40 hides the 45%-confidence image')
-popup.eval("chrome.storage.sync.set({slopThreshold: 60})", aw=True)
-time.sleep(0.8)
-check(state()['p_blog']['st'] == 'ok', 'threshold 60 shows it again')
-check(sum(1 for _ in open(here + '/api.log')) == lines_before, 'no new API calls for the threshold change')
-
-# 7. switching the feature off restores everything; on again uses the cache
+# 8. switching the feature off restores everything; on again hides again
 popup.eval("chrome.storage.sync.set({slopEnabled: false})", aw=True)
 time.sleep(0.8)
 st = state()
 check(all(st[k]['st'] is None for k in EXPECT), 'off: every attribute removed')
-check(st['p_poster']['src'].startswith('https://scontent'), 'off: blocked images restored')
+check(st['p_poster']['src'].startswith('https://scontent') and not st['__units'], 'off: blocked images restored, unit marks gone')
 popup.eval("chrome.storage.sync.set({slopEnabled: true})", aw=True)
-st = wait_settled(seconds=20, min_age=2)
-check(st['p_poster']['st'] == 'blocked' and st['p_lazy']['st'] == 'blocked', 'on again: slop hidden again')
-check(sum(1 for _ in open(here + '/api.log')) == lines_before, 'on again: served from the verdict cache, no API calls')
+st = wait_settled(seconds=6, min_age=1)
+check(all(st[k]['st'] == v for k, v in EXPECT.items()), 'on again: the same images hidden')
 
-# 8. the requests themselves
-reqs = [json.loads(l) for l in open(here + '/api.log')]
-imgs = [r for r in reqs if 'match' in r]
-check(len(imgs) == 7, '7 classification requests for 7 distinct images (got %d: %s)' % (len(imgs), sorted(r['match'] for r in imgs)))
-check(sorted(r['match'] for r in imgs) == sorted(['ai_poster', 'ai_infographic', 'ai_effect', 'ai_diagram', 'real_headshot', 'real_screenshot', 'blog_image']), 'every distinct image was classified exactly once')
-check(all(r['dist'] < 25 for r in imgs), 'downscaled JPEGs still match their originals (max dist %s)' % max(r['dist'] for r in imgs))
-check(all(max(r['w'], r['h']) <= 768 for r in imgs), 'images downscaled to 768px max side')
-check(all(r['media_type'] == 'image/jpeg' for r in imgs), 'sent as image/jpeg')
-check(all(r['model'] == 'claude-opus-5' and r['effort'] == 'low' and r['fallbacks'] == 'default' and r['beta'] == 'server-side-fallback-2026-07-01' for r in imgs), 'Opus 5 request shape: effort low, fallbacks default + beta header')
-check(all(r['version'] == '2023-06-01' and r['key'] == 'test-key' and r['browser'] == 'true' and r['system'] and r['max_tokens'] == 1024 for r in imgs), 'headers: anthropic-version, x-api-key, direct-browser-access; system prompt present')
-check(any(r['alt'] for r in imgs if r['match'] == 'ai_poster'), "Facebook's alt text is passed along")
-check(all(r['path'] == '/v1/messages' for r in reqs), 'posted to /v1/messages')
-
-# 9. the Test button path and a rejected key
-t = popup.eval("chrome.runtime.sendMessage({type: 'slop:test'})", aw=True)
-check(t and t.get('ok') and t.get('model') == 'claude-opus-5', 'Test button: %s' % json.dumps(t))
-popup.eval("chrome.storage.local.set({slopKey: 'bad-key', slopKeyError: ''})", aw=True)
-t = popup.eval("chrome.runtime.sendMessage({type: 'slop:test'})", aw=True)
-check(t and not t.get('ok') and '401' in t.get('error', ''), 'bad key reported: %s' % json.dumps(t))
-time.sleep(0.5)
-s = popup.eval(TAB % 'slop:getStats', aw=True)
-check(s and s['paused'] and s['reason'] == 'badkey', 'page pauses on a rejected key: %s' % json.dumps(s))
+# 9. per-site off via the shortcut's storage change
+popup.eval("chrome.storage.sync.set({disabledHosts: ['www.facebook.com']})", aw=True)
+time.sleep(0.8)
+check(all(state()[k]['st'] is None for k in EXPECT), 'disabled for www.facebook.com: everything restored')
+popup.eval("chrome.storage.sync.set({disabledHosts: []})", aw=True)
 
 print('PASS' if not fails else 'FAIL (%d)' % len(fails))
 sys.exit(1 if fails else 0)
