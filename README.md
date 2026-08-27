@@ -38,7 +38,7 @@ Works in Chrome, Brave, Edge, Arc and anything else Chromium-based.
 
 ## AI images on Facebook
 
-Meta puts a small "AI info" label on posts and comments that were made with AI, either because
+Facebook puts a small "AI content" label (older posts say "AI info") on posts and comments that were made with AI, either because
 the poster said so or because the file carried AI-generator metadata. Deserif looks for that label
 and swaps every content image inside the labeled post or comment (avatars, emoji and icons are
 skipped) for a grey card with a red prohibition sign and the words AI SLOP. The card is the same
