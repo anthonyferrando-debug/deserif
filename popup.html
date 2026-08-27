@@ -62,6 +62,8 @@
   .btns { display: flex; gap: 6px; margin: 0 0 6px; }
   .btns[hidden] { display: none; }
   #slopBody.dim { opacity: .45; pointer-events: none; }
+  #slopReport { width: 100%; height: 150px; margin: 0 0 6px; font: 10px/1.35 ui-monospace, Menlo, Consolas, monospace; border: 1px solid #ddd; border-radius: 6px; padding: 6px; resize: vertical; background: #fff; color: inherit; white-space: pre; overflow: auto; }
+  #slopReport[hidden] { display: none; }
 
   footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 12px; border-top: 1px solid #eee; }
   footer button { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: inherit; }
@@ -82,7 +84,8 @@
     .seg, .seg button + button, select, input[type=text], input[type=password], footer button, .btn { border-color: #3a3a3c; }
     .seg button { color: #ccc; }
     .seg button.on { background: #f2f2f2; color: #111; }
-    select, input[type=text], input[type=password], footer button, .btn { background: #2c2c2e; }
+    select, input[type=text], input[type=password], footer button, .btn, #slopReport { background: #2c2c2e; }
+    #slopReport { border-color: #3a3a3c; }
     .err { color: #ff5c52; }
     .ok { color: #4cc26b; }
   }
@@ -144,6 +147,11 @@
         <button class="btn" id="slopRecheck">Recheck</button>
       </div>
       <p class="muted small">Reads Meta's own "AI info" label on posts and comments. Nothing is sent anywhere.</p>
+      <div class="btns" id="slopDiagRow" hidden>
+        <button class="btn" id="slopDiag">Diagnose</button>
+        <button class="btn" id="slopCopy" hidden>Copy</button>
+      </div>
+      <textarea id="slopReport" readonly hidden spellcheck="false"></textarea>
     </div>
   </section>
 

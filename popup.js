@@ -16,7 +16,8 @@
     mode: $('mode'), preset: $('preset'), custom: $('custom'), deitalic: $('deitalic'), rescan: $('rescan'),
     version: $('version'),
     slopEnabled: $('slopEnabled'), slopBody: $('slopBody'), slopPage: $('slopPage'), slopPageBtns: $('slopPageBtns'),
-    slopShowAll: $('slopShowAll'), slopHideAll: $('slopHideAll'), slopRecheck: $('slopRecheck')
+    slopShowAll: $('slopShowAll'), slopHideAll: $('slopHideAll'), slopRecheck: $('slopRecheck'),
+    slopDiagRow: $('slopDiagRow'), slopDiag: $('slopDiag'), slopCopy: $('slopCopy'), slopReport: $('slopReport')
   };
 
   let settings = Object.assign({}, DEFAULTS);
@@ -79,6 +80,7 @@
     }
     els.slopPage.textContent = page;
     els.slopPageBtns.hidden = !buttons;
+    els.slopDiagRow.hidden = !isFacebook();
   }
 
   function renderFonts(stats) {
@@ -190,6 +192,20 @@
     els.slopShowAll.addEventListener('click', () => refreshSlop('slop:showAll'));
     els.slopHideAll.addEventListener('click', () => refreshSlop('slop:hideAll'));
     els.slopRecheck.addEventListener('click', () => refreshSlop('slop:recheck'));
+
+    // Diagnose: a plain-text report from the Facebook tab, for pasting to whoever is debugging.
+    els.slopDiag.addEventListener('click', async () => {
+      const r = await askTab('slop:diagnose');
+      els.slopReport.value = typeof r === 'string' ? r
+        : 'No answer from the page. The Facebook script is not running in this tab: reload the tab, and check that Deserif is on for this site.';
+      els.slopReport.hidden = false;
+      els.slopCopy.hidden = false;
+    });
+    els.slopCopy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(els.slopReport.value); els.slopCopy.textContent = 'Copied'; }
+      catch (e) { els.slopReport.select(); els.slopCopy.textContent = 'Select all'; }
+      setTimeout(() => { els.slopCopy.textContent = 'Copy'; }, 1500);
+    });
   }
 
   init();

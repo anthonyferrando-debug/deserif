@@ -71,7 +71,8 @@ STATE = """(() => {
 })()"""
 EXPECT = {
     'p_poster': 'blocked', 'p_effect': 'blocked', 'p_info': 'blocked', 'p_late': 'blocked',
-    'p_recycle': 'blocked', 'p_lazy': 'blocked',
+    'p_recycle': 'blocked', 'p_lazy': 'blocked', 'p_imagined': 'blocked', 'p_joined': 'blocked',
+    'p_feedchild': 'blocked', 'p_bare': 'blocked', 'p_feedplain': None,
     'p_c1': None, 'p_head': None, 'p_shot': None, 'p_blog': None, 'p_removed': None,
     'p_avatar': None, 'p_emoji': None, 'p_rsrc': None, 'p_offsite': None,
 }
@@ -103,7 +104,7 @@ st = wait_settled()
 for k, exp in EXPECT.items():
     got = st.get(k, {}).get('st')
     check(got == exp, '%-10s expected %-8s got %s' % (k, exp, got))
-check(sorted(st['__units']) == sorted(['post_header_label', 'post_overlay_label', 'comment_labeled', 'post_late_label', 'post_recycle', 'post_lazy']),
+check(sorted(st['__units']) == sorted(['post_header_label', 'post_overlay_label', 'comment_labeled', 'post_late_label', 'post_recycle', 'post_lazy', 'post_imagined', 'post_joined', 'post_feedchild', 'post_bare']),
       'labeled units: %s' % sorted(st['__units']))
 for k in ('p_poster', 'p_effect', 'p_info', 'p_lazy'):
     before = st['__sizes'].get(k)
@@ -149,7 +150,7 @@ check('ai_effect' in state()['p_recycle']['src'], 'recycled image reveals its ne
 # 7. popup messages: stats, hide again, show all
 TAB = "chrome.tabs.query({url: 'https://www.facebook.com/*'}).then(ts => chrome.tabs.sendMessage(ts[0].id, {type: '%s'}, {frameId: 0}))"
 s = popup.eval(TAB % 'slop:getStats', aw=True)
-check(s and s['blocked'] == 4 and s['shown'] == 2 and s['units'] == 6 and s['active'], 'popup stats %s' % json.dumps(s))
+check(s and s['blocked'] == 8 and s['shown'] == 2 and s['units'] == 10 and s['active'], 'popup stats %s' % json.dumps(s))
 popup.eval(TAB % 'slop:hideAll', aw=True)
 time.sleep(0.3)
 st = state()
@@ -157,16 +158,21 @@ check(st['p_poster']['st'] == 'blocked' and st['p_recycle']['st'] == 'blocked', 
 popup.eval(TAB % 'slop:showAll', aw=True)
 time.sleep(0.3)
 st = state()
-check(all(st[k]['st'] == 'shown' for k in ('p_poster', 'p_effect', 'p_info', 'p_late', 'p_recycle', 'p_lazy')), 'show all reveals everything')
+check(all(st[k]['st'] == 'shown' for k in ('p_poster', 'p_effect', 'p_info', 'p_late', 'p_recycle', 'p_lazy', 'p_imagined', 'p_joined', 'p_feedchild', 'p_bare')), 'show all reveals everything')
 popup.eval(TAB % 'slop:hideAll', aw=True)
 time.sleep(0.3)
+
+# 7b. the diagnose report
+d = popup.eval(TAB % 'slop:diagnose', aw=True)
+check(isinstance(d, str) and d.startswith('Deserif ') and 'labeled=10' in d and 'picked=1' in d and 'short text mentioning AI' in d and '"AI info" match=true' in d and 'match=false' in d,
+      'diagnose report: %s' % (d.splitlines()[0:4] if isinstance(d, str) else d))
 
 # 8. switching the feature off restores everything; on again hides again
 popup.eval("chrome.storage.sync.set({slopEnabled: false})", aw=True)
 time.sleep(0.8)
 st = state()
 check(all(st[k]['st'] is None for k in EXPECT), 'off: every attribute removed')
-check(st['p_poster']['src'].startswith('https://scontent') and not st['__units'], 'off: blocked images restored, unit marks gone')
+check(st['p_poster']['src'].startswith('https://scontent') and not st['__units'] and page.eval("document.querySelectorAll('[data-deserif-unit]').length") == 0, 'off: blocked images restored, unit marks gone')
 popup.eval("chrome.storage.sync.set({slopEnabled: true})", aw=True)
 st = wait_settled(seconds=6, min_age=1)
 check(all(st[k]['st'] == v for k, v in EXPECT.items()), 'on again: the same images hidden')

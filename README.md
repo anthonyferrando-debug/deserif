@@ -54,6 +54,10 @@ popup has Show all and Hide again for the whole page.
   elements Facebook recycles for a different picture are all handled.
 - The badge turns red with the number of hidden images. Turning the extension off for
   facebook.com (`Alt+Shift+D`) restores every hidden image on the page.
+- Nothing getting hidden on a page that clearly has the label? Click **Diagnose** in the popup on that
+  tab, copy the report and paste it into an issue. It lists what the script sees (post containers,
+  qualifying images, every short piece of text mentioning AI and whether it matched) so the matcher
+  can be extended for markup we have not seen.
 
 ## Popup
 
@@ -66,7 +70,7 @@ popup has Show all and Hide again for the whole page.
 - **Un-italicize serif headline accents**: the "one *word* in italic serif" headline trick gets
   straightened out too. Only applies inside replaced headings.
 - **AI images on Facebook**: on/off, and on a Facebook tab the labeled and hidden counts with
-  Show all, Hide again and Recheck.
+  Show all, Hide again, Recheck and Diagnose.
 
 ## Repo layout
 
