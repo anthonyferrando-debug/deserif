@@ -19,10 +19,7 @@
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 0; }
   .row > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .muted { color: #777; }
-  .muted.small, .small { font-size: 11px; }
-  p.small { margin: 3px 0 5px; }
-  .err { color: #e10600; }
-  .ok { color: #1a7f37; }
+  .muted.small { font-size: 11px; }
 
   /* switch */
   .switch { position: relative; display: inline-block; width: 34px; height: 20px; flex: none; }
@@ -48,22 +45,12 @@
   .seg button + button { border-left: 1px solid #ddd; }
   .seg button.on { background: #111; color: #fff; }
 
-  select, input[type=text], input[type=password] {
+  select, input[type=text] {
     font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid #ddd; border-radius: 6px; background: #fff; color: inherit;
   }
   select { max-width: 170px; }
   input[type=text] { width: 100%; margin-top: 6px; }
   input[type=text][hidden] { display: none; }
-
-  /* slop section */
-  .keyrow { display: flex; gap: 6px; margin: 4px 0 2px; }
-  .keyrow input { flex: 1; min-width: 0; }
-  .btn { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: inherit; }
-  .btn:hover { border-color: #999; }
-  .btn:disabled { opacity: .5; cursor: default; }
-  .btns { display: flex; gap: 6px; margin: 0 0 6px; }
-  .btns[hidden] { display: none; }
-  #slopBody.dim { opacity: .45; pointer-events: none; }
 
   footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 12px; border-top: 1px solid #eee; }
   footer button { font: inherit; font-size: 12px; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; color: inherit; }
@@ -81,12 +68,10 @@
     .switch input:checked + span { background: #f2f2f2; }
     .switch input:checked + span::before { background: #1c1c1e; }
     li .tag { background: #f2f2f2; color: #111; }
-    .seg, .seg button + button, select, input[type=text], input[type=password], footer button, .btn { border-color: #3a3a3c; }
+    .seg, .seg button + button, select, input[type=text], footer button { border-color: #3a3a3c; }
     .seg button { color: #ccc; }
     .seg button.on { background: #f2f2f2; color: #111; }
-    select, input[type=text], input[type=password], footer button, .btn { background: #2c2c2e; }
-    .err { color: #ff5c52; }
-    .ok { color: #4cc26b; }
+    select, input[type=text], footer button { background: #2c2c2e; }
   }
 </style>
 </head>
@@ -130,48 +115,6 @@
       <span>Un-italicize serif headline accents</span>
       <span class="switch" style="flex:none"><input type="checkbox" id="deitalic"><span></span></span>
     </label>
-  </section>
-
-  <section id="slopSection">
-    <h2>AI slop images on Facebook</h2>
-    <label class="row">
-      <span>Hide AI-generated images</span>
-      <span class="switch" style="flex:none"><input type="checkbox" id="slopEnabled"><span></span></span>
-    </label>
-    <div id="slopBody">
-      <p class="muted small" id="slopPage"></p>
-      <div class="btns" id="slopPageBtns" hidden>
-        <button class="btn" id="slopShowAll">Show all</button>
-        <button class="btn" id="slopHideAll">Hide again</button>
-        <button class="btn" id="slopRecheck">Recheck</button>
-      </div>
-      <div class="keyrow">
-        <input type="password" id="slopKey" placeholder="Anthropic API key (sk-ant-...)" autocomplete="off" spellcheck="false">
-        <button class="btn" id="slopTest">Test</button>
-      </div>
-      <p class="muted small" id="slopKeyMsg"></p>
-      <label class="row">
-        <span>Model</span>
-        <select id="slopModel">
-          <option value="claude-opus-5">Claude Opus 5</option>
-          <option value="claude-sonnet-5">Claude Sonnet 5</option>
-          <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
-        </select>
-      </label>
-      <label class="row">
-        <span>Hide when the model is</span>
-        <select id="slopThreshold">
-          <option value="40">40% sure or more</option>
-          <option value="60">60% sure or more</option>
-          <option value="80">80% sure or more</option>
-        </select>
-      </label>
-      <label class="row">
-        <span>Blur images until checked</span>
-        <span class="switch" style="flex:none"><input type="checkbox" id="slopBlur"><span></span></span>
-      </label>
-      <p class="muted small" id="slopTotals"></p>
-    </div>
   </section>
 
   <footer>
