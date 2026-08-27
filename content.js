@@ -10,8 +10,23 @@
  */
 (() => {
   'use strict';
-  if (window.__deserif) return;
-  window.__deserif = true;
+  // One live instance per frame. After the extension is reloaded or updated the
+  // old instance is orphaned (its chrome.runtime is gone); it steps aside and
+  // the freshly injected one takes over.
+  const prev = window.__deserif;
+  if (prev && typeof prev === 'object' && prev.alive && prev.alive()) return;
+  if (prev && typeof prev === 'object' && prev.retire) { try { prev.retire(); } catch (e) { /* ignore */ } }
+  const api = {
+    alive: () => { try { return !!(chrome.runtime && chrome.runtime.id); } catch (e) { return false; } },
+    retire: () => {
+      if (observer) observer.disconnect();
+      started = false;
+      try { deactivate(); } catch (e) { /* ignore */ }
+      try { chrome.runtime.onMessage.removeListener(onMessage); } catch (e) { /* runtime already gone */ }
+      try { chrome.storage.onChanged.removeListener(onStorage); } catch (e) { /* same */ }
+    }
+  };
+  window.__deserif = api;
 
   const ATTR = 'data-deserif';
   const ATTR_B = 'data-deserif-before';
@@ -453,6 +468,7 @@
 
   function onMutations(records) {
     if (!started) return;
+    if (!api.alive()) { api.retire(); return; }   // orphaned by an extension reload
     let sheetsTouched = false;
     const roots = [];
     const singles = [];
@@ -540,7 +556,7 @@
     fullScan();
   }
 
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  function onMessage(msg, sender, sendResponse) {
     if (!msg || window !== window.top) return;
     if (msg.type === 'getStats') {
       sendResponse(statsPayload());
@@ -548,14 +564,16 @@
       loadSettings().then(s => { applySettings(s); sendResponse(statsPayload()); });
       return true;
     }
-  });
+  }
+  chrome.runtime.onMessage.addListener(onMessage);
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  function onStorage(changes, area) {
     if (area !== 'sync') return;
     const next = Object.assign({}, settings);
     for (const k of Object.keys(changes)) next[k] = changes[k].newValue;
     applySettings(next);
-  });
+  }
+  chrome.storage.onChanged.addListener(onStorage);
 
   /* ------------------------------------------------------------------ */
   /* Boot                                                                */

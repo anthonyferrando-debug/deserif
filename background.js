@@ -14,7 +14,22 @@ const DEFAULTS = {
 const STALE_LOCAL = ['slopKey', 'slopKeyError', 'slopLastError', 'slopApiBase', 'slopCache', 'slopStats'];
 const STALE_SYNC = ['slopModel', 'slopThreshold', 'slopBlur'];
 
+// Tabs that were open before an install or update only have the old (or no)
+// script until they reload. Put the current scripts in now.
+async function injectIntoOpenTabs() {
+  let tabs = [];
+  try { tabs = await chrome.tabs.query({}); } catch (e) { return; }
+  for (const t of tabs) {
+    if (t.id == null || !t.url || !/^https?:/i.test(t.url)) continue;
+    try { await chrome.scripting.executeScript({ target: { tabId: t.id, allFrames: true }, files: ['content.js'] }); } catch (e) { /* chrome pages, the store, etc. */ }
+    if (/^https?:\/\/([^/]+\.)?facebook\.com\//i.test(t.url)) {
+      try { await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['slop.js'] }); } catch (e) { /* ignore */ }
+    }
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
+  injectIntoOpenTabs();
   chrome.storage.sync.get(DEFAULTS, items => {
     const missing = {};
     for (const k of Object.keys(DEFAULTS)) if (items[k] === undefined) missing[k] = DEFAULTS[k];

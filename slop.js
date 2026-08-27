@@ -11,9 +11,23 @@
  */
 (() => {
   'use strict';
-  if (window.__deserifSlop) return;
-  window.__deserifSlop = true;
   if (window !== window.top) return;
+  // One live instance per page. After the extension is reloaded or updated the
+  // old instance is orphaned (its chrome.runtime is gone); it retires and the
+  // freshly injected one takes over.
+  const prev = window.__deserifSlop;
+  if (prev && typeof prev === 'object' && prev.alive && prev.alive()) return;
+  if (prev && typeof prev === 'object' && prev.retire) { try { prev.retire(); } catch (e) { /* ignore */ } }
+  const api = {
+    alive: () => { try { return !!(chrome.runtime && chrome.runtime.id); } catch (e) { return false; } },
+    retire: () => {
+      try { stop(); } catch (e) { /* ignore */ }
+      document.removeEventListener('click', onClick, true);
+      try { chrome.runtime.onMessage.removeListener(onMessage); } catch (e) { /* runtime already gone */ }
+      try { chrome.storage.onChanged.removeListener(onStorage); } catch (e) { /* same */ }
+    }
+  };
+  window.__deserifSlop = api;
 
   const ATTR = 'data-deserif-slop';      // on images: blocked | shown
   const UNIT_ATTR = 'data-deserif-ai';   // on posts and comments Facebook labeled
@@ -379,6 +393,7 @@
   }
 
   function onMutations(records) {
+    if (!api.alive()) { api.retire(); return; }   // orphaned by an extension reload
     for (const r of records) {
       if (r.type === 'attributes') {
         if (r.target.tagName === 'IMG' && r.attributeName !== 'aria-label') onSrcChange(r.target);
@@ -543,21 +558,23 @@
     });
   }
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  function onStorage(changes, area) {
     if (area !== 'sync') return;
     const next = Object.assign({}, settings);
     for (const k of Object.keys(changes)) next[k] = changes[k].newValue;
     apply(next);
-  });
+  }
+  chrome.storage.onChanged.addListener(onStorage);
 
-  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  function onMessage(msg, sender, sendResponse) {
     if (!msg || typeof msg.type !== 'string' || msg.type.indexOf('slop:') !== 0) return;
     if (msg.type === 'slop:getStats') sendResponse(stats());
     else if (msg.type === 'slop:recheck') { if (active) scanAll(); sendResponse(stats()); }
     else if (msg.type === 'slop:showAll') { for (const img of document.querySelectorAll(SEL('blocked'))) reveal(img); sendResponse(stats()); }
     else if (msg.type === 'slop:hideAll') { for (const img of document.querySelectorAll(SEL('shown'))) rehide(img); sendResponse(stats()); }
     else if (msg.type === 'slop:diagnose') sendResponse(diagnose());
-  });
+  }
+  chrome.runtime.onMessage.addListener(onMessage);
 
   load().then(apply);
 })();

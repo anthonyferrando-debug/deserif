@@ -197,7 +197,7 @@
     els.slopDiag.addEventListener('click', async () => {
       const r = await askTab('slop:diagnose');
       els.slopReport.value = typeof r === 'string' ? r
-        : 'No answer from the page. The Facebook script is not running in this tab: reload the tab, and check that Deserif is on for this site.';
+        : 'No answer from the page. Reload this tab (it may have been open since before Deserif was installed or updated), and check that Deserif is on for this site.';
       els.slopReport.hidden = false;
       els.slopCopy.hidden = false;
     });
